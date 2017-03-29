@@ -1,4 +1,5 @@
-# authentication-server
+# authentication-server [![Build Status](https://travis-ci.org/Neufund/authentication-server.svg)](https://travis-ci.org/Neufund/authentication-server)
+
 JWT Authentication server using email, password, captcha and Google Authenticator
 
 Main Features:
