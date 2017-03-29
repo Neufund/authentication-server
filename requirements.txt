@@ -1,0 +1,6 @@
+Flask==0.12
+Flask-ReCaptcha==0.4.2
+PyJWT==1.4.2
+pyotp==2.2.4
+srp==1.0.6
+pytest==3.0.7
