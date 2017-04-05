@@ -1,0 +1,20 @@
+{
+  "name": "authentication-server-node",
+  "version": "0.1.0",
+  "description": "JWT Authentication server using email, password, captcha and Google Authenticator",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint src",
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Neufund/authentication-client.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^3.19.0",
+    "mocha": "^3.2.0"
+  }
+}
