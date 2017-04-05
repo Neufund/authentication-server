@@ -52,7 +52,7 @@ TODO
 
 *Recommended client side libraries*:
 
-* https://www.npmjs.com/package/srp
+* https://www.npmjs.com/package/jsrp
 * https://www.npmjs.com/package/scrypt-async
 
 TODO: authentication-client project
@@ -72,7 +72,8 @@ TODO: authentication-client project
 | `email_new`          | string   | Newly submitted, but unconfirmed email address        |
 | `email_token`        | string   | Email address confirmation token (empty if confirmed) |
 | `email_token_expiry` | datetime | Validity for email token                              |
-| `salt`               | bytes    | Salt used for SCrypt and SRP                          |
+| `kdf_salt`           | bytes    | Salt used for SCrypt                                  |
+| `srp_salt`           | bytes    | Salt used for SRP                                     |
 | `verifier`           | bytes    | SRP Verifier                                          |
 | `totp`               | bytes    | Time-based one-time-password secret                   |
 
@@ -99,12 +100,13 @@ The result taken in raw `binary` form. 256 bit random salt.
 
 Note: Captcha prevents this from automated detecting user existence
 
-1. User: generates random 32 byte `salt`
-5. User: `key = scrypt(password, salt)`
-6. User: `verifier = SRP6A_verifier(email, key, salt)`
+1. User: generates random 32 byte `kdf_salt`
+1. User: generates random 32 byte `srp_salt`
+5. User: `key = scrypt(password, kdf_salt)`
+6. User: `verifier = SRP6A_verifier(email, key, srp_salt)`
 3. User submits
     * `email`
-    * `salt`
+    * `salt`s
     * `verifier`
     * recaptcha token
 6. Server validate recaptcha
@@ -113,12 +115,13 @@ Note: Captcha prevents this from automated detecting user existence
 ### Log-in
 
 1. User calls `/challenge` with `email`
-2. Server looks up `salt` and `verifier`
+2. Server looks up `salt`s and `verifier`
 2. Server: `challenge = SRP6A_challenge(salt, verifier)`
 3. Server responds:
-    * `salt`
-    * `mac(challenge)`
-5. User: `key = scrypt(password, salt)`
+    * `salt`s
+    * `challenge`
+    * `mac`
+5. User: `key = scrypt(password, kdf_salt)`
 6. User: `response = SRP6A_response(challenge, salt, key)`
 7. User submits `/response`:
     * `email`
