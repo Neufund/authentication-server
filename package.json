@@ -4,6 +4,7 @@
   "description": "JWT Authentication server using email, password, captcha and Google Authenticator",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js",
     "lint": "eslint src",
     "test": "mocha"
   },
