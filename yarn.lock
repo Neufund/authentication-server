@@ -1489,6 +1489,10 @@ readline2@^1.0.1:
     is-fullwidth-code-point "^1.0.0"
     mute-stream "0.0.5"
 
+recaptcha-verify@^0.1.1:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/recaptcha-verify/-/recaptcha-verify-0.1.1.tgz#0f091d2ef0ae62ff738ba002cfae9affe8d91fae"
+
 rechoir@^0.6.2:
   version "0.6.2"
   resolved "https://registry.yarnpkg.com/rechoir/-/rechoir-0.6.2.tgz#85204b54dba82d5742e28c96756ef43af50e3384"
