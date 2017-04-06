@@ -26,6 +26,7 @@
     "body-parser": "^1.17.1",
     "express": "^4.15.2",
     "express-jsonschema": "^1.1.6",
+    "jsrp": "^0.2.3",
     "recaptcha-verify": "^0.1.1",
     "speakeasy": "^2.0.0",
     "sqlite": "^2.5.0"
