@@ -16,14 +16,20 @@ const signupSchema = JSON.parse(fs.readFileSync('./schemas/signupSchema.json'));
 const loginSchema = JSON.parse(fs.readFileSync('./schemas/loginSchema.json'));
 
 router.post('/signup', validate({ body: signupSchema }), catchAsyncErrors(async (req, res) => {
-  const recaptchaResponse = await toPromise(recaptcha.checkResponse.bind(recaptcha))(req.body['g-recaptcha-response']);
+  const recaptchaResponse = await toPromise(
+    recaptcha.checkResponse.bind(recaptcha))(req.body.captcha);
   if (!recaptchaResponse.success) {
     throw new Error(recaptchaResponse['error-codes']);
   }
-  const reqParams = (await statements).dollarPrefixKeys(req.body);
   const timeBasedOneTimeSecret = speakeasy.generateSecret({ length: 20 });
   const $timeBasedOneTimeSecret = timeBasedOneTimeSecret.base32;
-  const queryParams = Object.assign({}, reqParams, { $timeBasedOneTimeSecret });
+  const queryParams = {
+    $email: req.body.email,
+    $kdfSalt: req.body.kdfSalt,
+    $srpSalt: req.body.srpSalt,
+    $srpVerifier: req.body.srpVerifier,
+    $timeBasedOneTimeSecret,
+  };
   await statements.userInsertStmt.run(queryParams);
   res.send(queryParams);
 }));

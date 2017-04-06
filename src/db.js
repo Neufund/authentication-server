@@ -12,15 +12,8 @@ const init = async () => {
      WHERE email = $email`);
 };
 
-function dollarPrefixKeys(object) {
-  const dollarPrefixedKeysObject = {};
-  Object.keys(object).map(key => (dollarPrefixedKeysObject[`$${key}`] = object[key]));
-  return dollarPrefixedKeysObject;
-}
-
 module.exports = {
   init,
-  dollarPrefixKeys,
   get userInsertStmt() {
     return userInsertStmt;
   },
