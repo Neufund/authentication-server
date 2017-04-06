@@ -7,18 +7,17 @@
     },
     "kdfSalt": {
       "type": "string",
-      "minLength": 64,
-      "maxLength": 64,
+      "pattern": "^[0-9a-f]{64}",
       "required": true
     },
     "srpSalt": {
       "type": "string",
-      "minLength": 64,
-      "maxLength": 64,
+      "pattern": "^[0-9a-f]{64}",
       "required": true
     },
     "srpVerifier": {
       "type": "string",
+      "pattern": "^[0-9a-f]*",
       "required": true
     },
     "timeBasedOneTimeSecret": {
