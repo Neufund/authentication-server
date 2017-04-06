@@ -11,9 +11,9 @@ const recaptcha = new Recaptcha({
   verbose: true,
 });
 
-const userCreateSchema = JSON.parse(fs.readFileSync('./schemas/userCreateSchema.json'));
+const signupSchema = JSON.parse(fs.readFileSync('./schemas/signupSchema.json'));
 
-router.post('/signup', validate({ body: userCreateSchema }), catchAsyncErrors(async (req, res) => {
+router.post('/signup', validate({ body: signupSchema }), catchAsyncErrors(async (req, res) => {
   const recaptchaResponse = await toPromise(recaptcha.checkResponse.bind(recaptcha))(req.body['g-recaptcha-response']);
   if (!recaptchaResponse.success) {
     throw new Error(recaptchaResponse['error-codes']);
