@@ -2,6 +2,7 @@ const router = require('express').Router();
 const validate = require('express-jsonschema').validate;
 const speakeasy = require('speakeasy');
 const fs = require('fs');
+const db = require('sqlite');
 const jsrp = require('jsrp');
 const Recaptcha = require('recaptcha-verify');
 const { toPromise, catchAsyncErrors } = require('../utils');
@@ -14,6 +15,11 @@ const recaptcha = new Recaptcha({
 
 const signupSchema = JSON.parse(fs.readFileSync('./schemas/signupSchema.json'));
 const loginSchema = JSON.parse(fs.readFileSync('./schemas/loginSchema.json'));
+
+// TODO: Remove this debug endpoint
+router.get('/', async (req, res) => {
+  res.send(await db.all('SELECT * FROM Users'));
+});
 
 router.post('/signup', validate({ body: signupSchema }), catchAsyncErrors(async (req, res) => {
   const recaptchaResponse = await toPromise(
