@@ -14,6 +14,7 @@ const recaptcha = new Recaptcha({
 });
 
 const signupSchema = JSON.parse(fs.readFileSync('./schemas/signupSchema.json'));
+const loginDataSchema = JSON.parse(fs.readFileSync('./schemas/loginDataSchema.json'));
 const loginSchema = JSON.parse(fs.readFileSync('./schemas/loginSchema.json'));
 
 // TODO: Remove this debug endpoint
@@ -38,6 +39,25 @@ router.post('/signup', validate({ body: signupSchema }), catchAsyncErrors(async 
   };
   await statements.userInsertStmt.run(queryParams);
   res.send(queryParams);
+}));
+
+// TODO sign the response with mac
+router.post('/login-data', validate({ body: loginDataSchema }), catchAsyncErrors(async (req, res) => {
+  const email = req.body.email;
+  const {
+    kdfSalt,
+    srpSalt,
+    srpVerifier,
+  } = await statements.getLoginDataForEmailStmt.get({ $email: email });
+  // eslint-disable-next-line new-cap
+  const srpServer = new jsrp.server();
+  await toPromise(srpServer.init.bind(srpServer))({ salt: srpSalt, verifier: srpVerifier });
+  const responseData = {
+    serverPublicKey: srpServer.getPublicKey(),
+    kdfSalt,
+    srpSalt,
+  };
+  res.send(responseData);
 }));
 
 router.post('/login', validate({ body: loginSchema }), catchAsyncErrors(async (req, res) => {
