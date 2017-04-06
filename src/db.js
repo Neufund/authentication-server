@@ -1,15 +1,13 @@
 const db = require('sqlite');
 
 let userInsertStmt;
-let getLoginDataForEmailStmt;
+let getUserByEmailStmt;
 
 const init = async () => {
   userInsertStmt = await db.prepare(
     `INSERT INTO Users (email, kdfSalt, srpSalt, srpVerifier, timeBasedOneTimeSecret)
                 VALUES ($email, $kdfSalt, $srpSalt, $srpVerifier, $timeBasedOneTimeSecret)`);
-  getLoginDataForEmailStmt = await db.prepare(
-    `SELECT kdfSalt, srpSalt, srpVerifier, timeBasedOneTimeSecret FROM Users
-     WHERE email = $email`);
+  getUserByEmailStmt = await db.prepare(`SELECT * FROM Users WHERE email = $email`);
 };
 
 module.exports = {
@@ -17,7 +15,7 @@ module.exports = {
   get userInsertStmt() {
     return userInsertStmt;
   },
-  get getLoginDataForEmailStmt() {
-    return getLoginDataForEmailStmt;
+  get getUserByEmailStmt() {
+    return getUserByEmailStmt;
   },
 };

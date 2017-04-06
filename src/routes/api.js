@@ -44,7 +44,7 @@ router.post('/login', validate({ body: loginSchema }), catchAsyncErrors(async (r
   const clientPublicKey = req.body.publicKey;
   const clientProof = req.body.clientProof;
   const email = req.body.email;
-  const { srpSalt, srpVerifier } = await statements.getLoginDataForEmailStmt.get({ $email: email });
+  const { srpSalt, srpVerifier } = await statements.getUserByEmailStmt.get({ $email: email });
   // eslint-disable-next-line new-cap
   const srpServer = new jsrp.server();
   await toPromise(srpServer.init.bind(srpServer))({ salt: srpSalt, verifier: srpVerifier });
