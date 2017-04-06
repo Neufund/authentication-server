@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
 
 router.post('/', validate({ body: userCreateSchema }), async (req, res, next) => {
   try {
-    await statements.userInsertStmt.run(req.body.email);
+    await statements.userInsertStmt.run(req.body);
     res.send(req.body);
   } catch (e) {
     next(e);

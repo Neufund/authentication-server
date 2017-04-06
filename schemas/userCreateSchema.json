@@ -4,6 +4,26 @@
     "email": {
       "type": "email",
       "required": true
+    },
+    "kdfSalt": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64,
+      "required": true
+    },
+    "srpSalt": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64,
+      "required": true
+    },
+    "srpVerifier": {
+      "type": "string",
+      "required": true
+    },
+    "timeBasedOneTimeSecret": {
+      "type": "string",
+      "required": true
     }
   },
   "additionalProperties": false
