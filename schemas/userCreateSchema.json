@@ -19,10 +19,6 @@
       "type": "string",
       "pattern": "^[0-9a-f]*",
       "required": true
-    },
-    "timeBasedOneTimeSecret": {
-      "type": "string",
-      "required": true
     }
   },
   "additionalProperties": false
