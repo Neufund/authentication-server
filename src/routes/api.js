@@ -1,7 +1,6 @@
 const router = require('express').Router();
 const validate = require('express-jsonschema').validate;
 const speakeasy = require('speakeasy');
-const db = require('sqlite');
 const fs = require('fs');
 const Recaptcha = require('recaptcha-verify');
 const { toPromise, catchAsyncErrors } = require('../utils');
@@ -14,12 +13,7 @@ const recaptcha = new Recaptcha({
 
 const userCreateSchema = JSON.parse(fs.readFileSync('./schemas/userCreateSchema.json'));
 
-router.get('/', async (req, res) => {
-  const users = await db.all('SELECT * FROM Users');
-  res.send(users);
-});
-
-router.post('/', validate({ body: userCreateSchema }), catchAsyncErrors(async (req, res) => {
+router.post('/signup', validate({ body: userCreateSchema }), catchAsyncErrors(async (req, res) => {
   const recaptchaResponse = await toPromise(recaptcha.checkResponse.bind(recaptcha))(req.body['g-recaptcha-response']);
   if (!recaptchaResponse.success) {
     throw new Error(recaptchaResponse['error-codes']);
