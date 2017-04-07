@@ -1,4 +1,5 @@
 const db = require('sqlite');
+const winston = require('winston');
 
 let userInsertStmt;
 let getUserByEmailStmt;
@@ -16,7 +17,7 @@ module.exports = {
   init,
   get db() {
     // eslint-disable-next-line no-console
-    console.warn('Do not use DB object itself. Use prepared statements instead');
+    winston.warning('Do not use DB object itself. Use prepared statements instead');
     return db;
   },
   get userInsertStmt() {
