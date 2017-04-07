@@ -2,15 +2,14 @@ const router = require('express').Router();
 const validate = require('express-jsonschema').validate;
 const speakeasy = require('speakeasy');
 const fs = require('fs');
-const db = require('sqlite');
 const jsrp = require('jsrp');
 const Recaptcha = require('recaptcha-verify');
 const { toPromise, catchAsyncErrors } = require('../utils');
-const statements = require('../db');
+const database = require('../database');
 
 const recaptcha = new Recaptcha({
   secret: process.env.RECAPTCHA_SECRET_KEY,
-  verbose: true,
+  verbose: process.env.VERBOSE || false,
 });
 
 const signupSchema = JSON.parse(fs.readFileSync('./schemas/signupSchema.json'));
@@ -19,7 +18,7 @@ const loginSchema = JSON.parse(fs.readFileSync('./schemas/loginSchema.json'));
 
 // TODO: Remove this debug endpoint
 router.get('/', async (req, res) => {
-  res.send(await db.all('SELECT * FROM Users'));
+  res.send(await database.db.all('SELECT * FROM Users'));
 });
 
 router.post('/signup', validate({ body: signupSchema }), catchAsyncErrors(async (req, res) => {
@@ -37,7 +36,7 @@ router.post('/signup', validate({ body: signupSchema }), catchAsyncErrors(async 
     $srpVerifier: req.body.srpVerifier,
     $timeBasedOneTimeSecret,
   };
-  await statements.userInsertStmt.run(queryParams);
+  await database.userInsertStmt.run(queryParams);
   res.send(queryParams);
 }));
 
@@ -48,7 +47,7 @@ router.post('/login-data', validate({ body: loginDataSchema }), catchAsyncErrors
     kdfSalt,
     srpSalt,
     srpVerifier,
-  } = await statements.getLoginDataForEmailStmt.get({ $email: email });
+  } = await database.getLoginDataForEmailStmt.get({ $email: email });
   // eslint-disable-next-line new-cap
   const srpServer = new jsrp.server();
   await toPromise(srpServer.init.bind(srpServer))({ salt: srpSalt, verifier: srpVerifier });
@@ -64,7 +63,7 @@ router.post('/login', validate({ body: loginSchema }), catchAsyncErrors(async (r
   const clientPublicKey = req.body.publicKey;
   const clientProof = req.body.clientProof;
   const email = req.body.email;
-  const { srpSalt, srpVerifier } = await statements.getUserByEmailStmt.get({ $email: email });
+  const { srpSalt, srpVerifier } = await database.getUserByEmailStmt.get({ $email: email });
   // eslint-disable-next-line new-cap
   const srpServer = new jsrp.server();
   await toPromise(srpServer.init.bind(srpServer))({ salt: srpSalt, verifier: srpVerifier });
