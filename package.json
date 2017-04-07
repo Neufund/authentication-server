@@ -15,15 +15,15 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "chai": "^3.5.0",
+    "chai-http": "^3.0.0",
     "eslint": "^3.19.0",
     "eslint-config-airbnb": "^14.1.0",
     "eslint-plugin-import": "^2.2.0",
     "eslint-plugin-jsx-a11y": "^4.0.0",
     "eslint-plugin-react": "^6.10.3",
     "mocha": "^3.2.0",
-    "sinon": "^2.1.0",
-    "chai": "^3.5.0",
-    "chai-http": "^3.0.0"
+    "sinon": "^2.1.0"
   },
   "dependencies": {
     "body-parser": "^1.17.1",
@@ -32,6 +32,7 @@
     "jsrp": "^0.2.3",
     "recaptcha-verify": "^0.1.1",
     "speakeasy": "^2.0.0",
-    "sqlite": "^2.5.0"
+    "sqlite": "^2.5.0",
+    "winston": "^2.3.1"
   }
 }
