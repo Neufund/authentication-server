@@ -7,11 +7,6 @@ const Recaptcha = require('recaptcha-verify');
 const { toPromise, catchAsyncErrors } = require('../utils');
 const database = require('../database');
 
-const recaptcha = new Recaptcha({
-  secret: process.env.RECAPTCHA_SECRET_KEY,
-  verbose: process.env.VERBOSE || false,
-});
-
 const signupSchema = JSON.parse(fs.readFileSync('./schemas/signupSchema.json'));
 const loginDataSchema = JSON.parse(fs.readFileSync('./schemas/loginDataSchema.json'));
 const loginSchema = JSON.parse(fs.readFileSync('./schemas/loginSchema.json'));
@@ -22,6 +17,10 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/signup', validate({ body: signupSchema }), catchAsyncErrors(async (req, res) => {
+  const recaptcha = new Recaptcha({
+    secret: process.env.RECAPTCHA_SECRET_KEY,
+    verbose: process.env.VERBOSE || false,
+  });
   const recaptchaResponse = await toPromise(
     recaptcha.checkResponse.bind(recaptcha))(req.body.captcha);
   if (!recaptchaResponse.success) {
