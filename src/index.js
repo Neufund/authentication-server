@@ -1,4 +1,5 @@
 const express = require('express');
+const winston = require('winston');
 const database = require('./database');
 const router = require('./router');
 const bodyParser = require('body-parser');
@@ -7,6 +8,9 @@ const schemaValidationErrorMiddleware = require('./middlewares/schemaValidationE
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+winston.setLevels(winston.config.syslog.levels);
+winston.level = process.env.LOG_LEVEL || 'warning';
 
 app.use(bodyParser.json());
 app.use(corsMiddleware);
@@ -17,7 +21,7 @@ async function start() {
   await database.init();
   app.listen(PORT, () => {
     // eslint-disable-next-line no-console
-    console.log(`Example app listening on port ${PORT}!`);
+    winston.info(`Example app listening on port ${PORT}!`);
   });
   return app;
 }

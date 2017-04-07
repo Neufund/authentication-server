@@ -1,11 +1,11 @@
-/* eslint-disable no-console */
+const winston = require('winston');
+
 module.exports = (err, req, res, next) => {
   let responseData;
 
   if (err.name === 'JsonSchemaValidation') {
-    // Log the error however you please
-    console.log(err.message);
     // logs "express-jsonschema: Invalid data found"
+    winston.warning(err.message);
 
     // Set a bad request http response status or whatever you want
     res.status(400);
