@@ -25,7 +25,8 @@ router.post('/signup', validate({ body: signupSchema }), catchAsyncErrors(async 
   const recaptchaResponse = await toPromise(
     recaptcha.checkResponse.bind(recaptcha))(req.body.captcha);
   if (!recaptchaResponse.success) {
-    throw new Error(recaptchaResponse['error-codes']);
+    res.status(400).send('reCAPTCHA verification failed');
+    return;
   }
   const timeBasedOneTimeSecret = speakeasy.generateSecret({ length: 20 });
   const $timeBasedOneTimeSecret = timeBasedOneTimeSecret.base32;
@@ -37,7 +38,7 @@ router.post('/signup', validate({ body: signupSchema }), catchAsyncErrors(async 
     $timeBasedOneTimeSecret,
   };
   await database.userInsertStmt.run(queryParams);
-  res.send(queryParams);
+  res.send($timeBasedOneTimeSecret);
 }));
 
 // TODO sign the response with mac
