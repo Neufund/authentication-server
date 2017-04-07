@@ -13,12 +13,14 @@ app.use(corsMiddleware);
 app.use(router);
 app.use(schemaValidationErrorMiddleware);
 
-database.init().then(() => {
+async function start() {
+  await database.init();
   app.listen(PORT, () => {
     // eslint-disable-next-line no-console
     console.log(`Example app listening on port ${PORT}!`);
   });
-});
+  return app;
+}
 
 // For testing
-module.exports = app;
+module.exports = start();
