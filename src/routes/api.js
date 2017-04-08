@@ -1,3 +1,6 @@
+/* eslint new-cap: ["error", {
+ "newIsCapExceptions": ["jsrp.server"],
+ "capIsNewExceptions": ["Router"] }] */
 const router = require('express').Router();
 const validate = require('express-jsonschema').validate;
 const speakeasy = require('speakeasy');
@@ -48,7 +51,6 @@ router.post('/login-data', validate({ body: loginDataSchema }), catchAsyncErrors
     srpSalt,
     srpVerifier,
   } = await database.getLoginDataForEmailStmt.get({ $email: email });
-  // eslint-disable-next-line new-cap
   const srpServer = new jsrp.server();
   await toPromise(srpServer.init.bind(srpServer))({ salt: srpSalt, verifier: srpVerifier });
   const responseData = {
@@ -64,7 +66,6 @@ router.post('/login', validate({ body: loginSchema }), catchAsyncErrors(async (r
   const clientProof = req.body.clientProof;
   const email = req.body.email;
   const { srpSalt, srpVerifier } = await database.getUserByEmailStmt.get({ $email: email });
-  // eslint-disable-next-line new-cap
   const srpServer = new jsrp.server();
   await toPromise(srpServer.init.bind(srpServer))({ salt: srpSalt, verifier: srpVerifier });
   srpServer.setClientPublicKey(clientPublicKey);

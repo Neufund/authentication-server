@@ -16,7 +16,6 @@ const init = async () => {
 module.exports = {
   init,
   get db() {
-    // eslint-disable-next-line no-console
     winston.warning('Do not use DB object itself. Use prepared statements instead');
     return db;
   },

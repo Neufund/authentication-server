@@ -20,7 +20,6 @@ app.use(schemaValidationErrorMiddleware);
 async function start() {
   await database.init();
   app.listen(PORT, () => {
-    // eslint-disable-next-line no-console
     winston.info(`Example app listening on port ${PORT}!`);
   });
   return app;
