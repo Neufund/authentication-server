@@ -73,7 +73,7 @@ router.post('/login', validate({ body: loginSchema }), catchAsyncErrors(async (r
     // TODO Issue JWT
     res.send(srpServer.getProof());
   } else {
-    throw new Error('Login failed');
+    res.status(403).send('Login failed');
   }
 }));
 
