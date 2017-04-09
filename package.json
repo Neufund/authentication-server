@@ -1,7 +1,7 @@
 {
   "name": "authentication-server",
   "version": "0.1.0",
-  "description": "JWT Authentication server using email, password, captcha and Google Authenticator",
+  "description": "JWT Authentication server using email, password (SRP-6a), captcha and Google Authenticator",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
@@ -10,9 +10,20 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Neufund/authentication-client.git"
+    "url": "git+https://github.com/Neufund/authentication-server.git"
   },
-  "author": "",
+  "bugs": {
+    "url": "https://github.com/Neufund/authentication-server/issues"
+  },
+  "keywords": [
+    "auth",
+    "authentication",
+    "password",
+    "srp-6a",
+    "captcha",
+    "docker"
+  ],
+  "author": "Leonid Logvinov <logvinov.leon@gmail.com>",
   "license": "MIT",
   "devDependencies": {
     "chai": "^3.5.0",
