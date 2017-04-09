@@ -50,7 +50,7 @@ router.post('/login-data', validate({ body: loginDataSchema }), catchAsyncErrors
     kdfSalt,
     srpSalt,
     srpVerifier,
-  } = await database.getLoginDataForEmailStmt.get({ $email: email });
+  } = await database.getUserByEmailStmt.get({ $email: email });
   const srpServer = new jsrp.server();
   await toPromise(srpServer.init.bind(srpServer))({ salt: srpSalt, verifier: srpVerifier });
   const responseData = {

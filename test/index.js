@@ -14,6 +14,14 @@ winston.remove(winston.transports.Console);
 
 describe('Auth server', () => {
   let server;
+  const signupUrl = '/api/signup';
+  const userSignupData = {
+    email: 'logvinov.leon@gmail.com',
+    kdfSalt: '4c8ef9dbfff033fcbc158ed6d54b9ed14f4df6bcbf7d0887c00e377d2cb15e5e',
+    srpSalt: 'c104a024e15ed8c2b4b20e601dba90772205f0fc5a1cb56f637da2e790b55813',
+    srpVerifier: '4c8ef9dbfff033fcbc158ed6d54b9ed14f4df6bcbf7d0887c00e377d2cb15e5e',
+    captcha: 'goodCaptcha',
+  };
 
   before('Wait for DB initialization', async () => {
     process.env.RECAPTCHA_SECRET_KEY = true;
@@ -23,16 +31,7 @@ describe('Auth server', () => {
     await database.db.run('DELETE FROM Users');
   });
 
-  describe('/api/signup', () => {
-    const url = '/api/signup';
-    const userSignupData = {
-      email: 'logvinov.leon@gmail.com',
-      kdfSalt: '4c8ef9dbfff033fcbc158ed6d54b9ed14f4df6bcbf7d0887c00e377d2cb15e5e',
-      srpSalt: 'c104a024e15ed8c2b4b20e601dba90772205f0fc5a1cb56f637da2e790b55813',
-      srpVerifier: '4c8ef9dbfff033fcbc158ed6d54b9ed14f4df6bcbf7d0887c00e377d2cb15e5e',
-      captcha: 'goodCaptcha',
-    };
-
+  describe('captcha check mocked', () => {
     before('stub captcha verification', () => {
       sinon.stub(Recaptcha.prototype, 'checkResponse').callsFake((userResponse, callback) => {
         const data = { success: userResponse === 'goodCaptcha' };
@@ -45,44 +44,65 @@ describe('Auth server', () => {
       Recaptcha.prototype.checkResponse.restore();
     });
 
-    it('should validate schema', async () => (
-      chai.request(server).post(url).catch(err => expect(err).to.have.status(400))
-    ));
-    describe('should check captcha', () => {
-      it('throws an error on wrong captcha', async () => (
-        chai.request(server).post(url)
-          .send(Object.assign({}, userSignupData, { captcha: 'wrongCaptcha' }))
-          .catch((err) => {
-            expect(err).to.have.status(400);
-            expect(err.response.text).equal('reCAPTCHA verification failed');
-          })
+    describe('/api/signup', () => {
+      const url = signupUrl;
+
+      it('validates schema', async () => (
+        chai.request(server).post(url).catch(err => expect(err).to.have.status(400))
       ));
-      it('succeeds with good captcha', async () => {
-        const res = await chai.request(server).post(url).send(userSignupData);
-        expect(res).to.have.status(200);
+      describe('should check captcha', () => {
+        it('throws an error on wrong captcha', async () => (
+          chai.request(server).post(url)
+            .send(Object.assign({}, userSignupData, { captcha: 'wrongCaptcha' }))
+            .catch((err) => {
+              expect(err).to.have.status(400);
+              expect(err.response.text).equal('reCAPTCHA verification failed');
+            })
+        ));
+        it('succeeds with good captcha', async () => {
+          const res = await chai.request(server).post(url).send(userSignupData);
+          expect(res).to.have.status(200);
+        });
+      });
+      it('stores user data in DB', async () => {
+        await chai.request(server).post(url).send(Object.assign(userSignupData));
+        const users = await database.db.all('SELECT * FROM Users');
+        expect(users).to.have.lengthOf(1);
+        const user = users[0];
+        expect(user).to.not.have.property('captcha');
+        expect(user).to.have.property('id', 1);
+        expect(user).to.have.property('email', userSignupData.email);
+        expect(user).to.have.property('newEmail', null);
+        expect(user).to.have.property('emailToken', null);
+        expect(user).to.have.property('kdfSalt', userSignupData.kdfSalt);
+        expect(user).to.have.property('srpSalt', userSignupData.srpSalt);
+        expect(user).to.have.property('srpVerifier', userSignupData.srpVerifier);
+        expect(user).to.have.property('created');
+        expect(user).to.have.property('updated');
+        expect(user).to.have.property('lastUsed');
+        expect(user).to.have.property('timeBasedOneTimeSecret');
+      });
+      it('returns OTP code', async () => {
+        const res = await chai.request(server).post(url).send(Object.assign(userSignupData));
+        expect(res.text).to.have.lengthOf(32);
       });
     });
-    it('should store user data in DB', async () => {
-      await chai.request(server).post(url).send(Object.assign(userSignupData));
-      const users = await database.db.all('SELECT * FROM Users');
-      expect(users).to.have.lengthOf(1);
-      const user = users[0];
-      expect(user).to.not.have.property('captcha');
-      expect(user).to.have.property('id', 1);
-      expect(user).to.have.property('email', userSignupData.email);
-      expect(user).to.have.property('newEmail', null);
-      expect(user).to.have.property('emailToken', null);
-      expect(user).to.have.property('kdfSalt', userSignupData.kdfSalt);
-      expect(user).to.have.property('srpSalt', userSignupData.srpSalt);
-      expect(user).to.have.property('srpVerifier', userSignupData.srpVerifier);
-      expect(user).to.have.property('created');
-      expect(user).to.have.property('updated');
-      expect(user).to.have.property('lastUsed');
-      expect(user).to.have.property('timeBasedOneTimeSecret');
-    });
-    it('should return OTP code', async () => {
-      const res = await chai.request(server).post(url).send(Object.assign(userSignupData));
-      expect(res.text).to.have.lengthOf(32);
+    describe('/api/login-data', () => {
+      const url = '/api/login-data';
+      const loginDataRequestPayload = { email: userSignupData.email };
+
+      beforeEach('Create test user', async () => {
+        await chai.request(server).post(signupUrl).send(userSignupData);
+      });
+      it('gets user login data', async () => {
+        const loginDataResponse = await chai.request(server)
+          .post(url).send(loginDataRequestPayload);
+        expect(loginDataResponse).to.have.status(200);
+        const loginData = loginDataResponse.body;
+        expect(loginData).to.have.property('serverPublicKey');
+        expect(loginData).to.have.property('kdfSalt', userSignupData.kdfSalt);
+        expect(loginData).to.have.property('srpSalt', userSignupData.srpSalt);
+      });
     });
   });
 });
