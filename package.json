@@ -1,5 +1,5 @@
 {
-  "name": "authentication-server-node",
+  "name": "authentication-server",
   "version": "0.1.0",
   "description": "JWT Authentication server using email, password, captcha and Google Authenticator",
   "main": "src/index.js",
