@@ -6,6 +6,8 @@ const dirtyChai = require('dirty-chai');
 const app = require('../src');
 const database = require('../src/database');
 const Recaptcha = require('recaptcha-verify');
+const fs = require('fs');
+const jwt = require('jsonwebtoken');
 const jsrp = require('jsrp');
 const speakeasy = require('speakeasy');
 const scrypt = require('scrypt-async');
@@ -208,7 +210,7 @@ describe('Auth server', () => {
         ));
         it('returns correct server proof', async () => {
           const response = await login(passphrase);
-          expect(srpClient.checkServerProof(response.text)).to.be.true();
+          expect(srpClient.checkServerProof(response.body.serverProof)).to.be.true();
         });
         it('fails to log in with wrong 2FA', async () => {
           const wrongSecret = 'EEWCYWBVM5BWO6DPIVDWIZRKPNKFOJBI';
@@ -222,6 +224,17 @@ describe('Auth server', () => {
               timeBasedOneTimeSecret = rightSecret;
             }
           });
+        });
+        it('returns correct jwt', async () => {
+          const jwtPublicKey = fs.readFileSync('./ec512.pub.pem');
+          const response = await login(passphrase);
+          expect(response.body).to.have.property('token');
+          const token = response.body.token;
+          const tokenPayload = jwt.verify(token, jwtPublicKey);
+          expect(tokenPayload).to.have.property('iss', 'Neufund');
+          expect(tokenPayload).to.have.property('email', email);
+          expect(tokenPayload).to.have.property('loginMethod', '2FA');
+          expect(tokenPayload).to.have.property('iat');
         });
       });
     });

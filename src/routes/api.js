@@ -6,6 +6,7 @@ const validate = require('express-jsonschema').validate;
 const speakeasy = require('speakeasy');
 const fs = require('fs');
 const jsrp = require('jsrp');
+const jwt = require('jsonwebtoken');
 const Recaptcha = require('recaptcha-verify');
 const { toPromise, catchAsyncErrors } = require('../utils');
 const database = require('../database');
@@ -14,6 +15,7 @@ const authenticatedEncryption = require('../authenticated-encryption');
 const signupSchema = JSON.parse(fs.readFileSync('./schemas/signupSchema.json'));
 const loginDataSchema = JSON.parse(fs.readFileSync('./schemas/loginDataSchema.json'));
 const loginSchema = JSON.parse(fs.readFileSync('./schemas/loginSchema.json'));
+const jwtPrivateKey = fs.readFileSync('./ec512.prv.pem');
 
 // TODO: Remove this debug endpoint
 router.get('/', async (req, res) => {
@@ -44,7 +46,6 @@ router.post('/signup', validate({ body: signupSchema }), catchAsyncErrors(async 
   res.send($timeBasedOneTimeSecret);
 }));
 
-// TODO sign the response with mac
 router.post('/login-data', validate({ body: loginDataSchema }), catchAsyncErrors(async (req, res) => {
   const email = req.body.email;
   const {
@@ -68,8 +69,9 @@ router.post('/login-data', validate({ body: loginDataSchema }), catchAsyncErrors
 }));
 
 router.post('/login', validate({ body: loginSchema }), catchAsyncErrors(async (req, res) => {
+  const email = req.body.email;
   const { srpSalt, srpVerifier, timeBasedOneTimeSecret } =
-    await database.getUserByEmailStmt.get({ $email: req.body.email });
+    await database.getUserByEmailStmt.get({ $email: email });
   const timeBasedOneTimePasswordParams = {
     secret: timeBasedOneTimeSecret,
     encoding: 'base32',
@@ -92,8 +94,15 @@ router.post('/login', validate({ body: loginSchema }), catchAsyncErrors(async (r
   });
   srpServer.setClientPublicKey(req.body.clientPublicKey);
   if (srpServer.checkClientProof(req.body.clientProof)) {
-    // TODO Issue JWT
-    res.send(srpServer.getProof());
+    const jwtPayload = { email, loginMethod: '2FA' };
+    const jwtOptions = {
+      issuer: 'Neufund',
+      algorithm: 'ES512',
+    };
+    res.send({
+      serverProof: srpServer.getProof(),
+      token: jwt.sign(jwtPayload, jwtPrivateKey, jwtOptions),
+    });
   } else {
     res.status(403).send('Login failed');
   }

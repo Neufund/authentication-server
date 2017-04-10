@@ -41,6 +41,7 @@
     "dirty-chai": "^1.2.2",
     "express": "^4.15.2",
     "express-jsonschema": "^1.1.6",
+    "jsonwebtoken": "^7.3.0",
     "jsrp": "^0.2.3",
     "randombytes": "^2.0.3",
     "recaptcha-verify": "^0.1.1",
