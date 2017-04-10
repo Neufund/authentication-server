@@ -1,5 +1,6 @@
 /* eslint import/no-extraneous-dependencies: ["error", {"devDependencies": true}]*/
 const chai = require('chai');
+const sinon = require('sinon');
 const dirtyChai = require('dirty-chai');
 const authenticatedEncryption = require('../src/authenticated-encryption');
 
@@ -32,6 +33,31 @@ describe('Authenticated encryption', () => {
       const decrypted = authenticatedEncryption.decrypt(encrypted);
       expect(decrypted.authOk).to.be.true();
       expect(decrypted.plainText).to.equal('plaintext');
+    });
+    it('fails to decrypt if expired', () => {
+      const clock = sinon.useFakeTimers(Date.now());
+      try {
+        const ttl = 10;
+        const encrypted = authenticatedEncryption.encrypt('plaintext', ttl);
+        clock.tick(((ttl + 5) * 1000)); // go 15s to the future
+        const decrypted = authenticatedEncryption.decrypt(encrypted);
+        expect(decrypted.authOk).to.be.false();
+      } finally {
+        clock.restore();
+      }
+    });
+    it('fails to decrypt if ttl was changed', () => {
+      const clock = sinon.useFakeTimers(Date.now());
+      try {
+        const ttl = 10;
+        const encrypted = authenticatedEncryption.encrypt('plaintext', ttl);
+        clock.tick(((ttl + 5) * 1000)); // go 15s to the future
+        encrypted.expiresAt += 10; // non authenticated expiresAt
+        const decrypted = authenticatedEncryption.decrypt(encrypted);
+        expect(decrypted.authOk).to.be.false();
+      } finally {
+        clock.restore();
+      }
     });
   });
 });

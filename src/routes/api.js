@@ -54,7 +54,10 @@ router.post('/login-data', validate({ body: loginDataSchema }), catchAsyncErrors
   } = await database.getUserByEmailStmt.get({ $email: email });
   const srpServer = new jsrp.server();
   await toPromise(srpServer.init.bind(srpServer))({ salt: srpSalt, verifier: srpVerifier });
-  const encryptedPart = authenticatedEncryption.encrypt(srpServer.getPrivateKey(), srpVerifier);
+  const encryptedPart = authenticatedEncryption.encrypt(
+    srpServer.getPrivateKey(),
+    process.env.ENCRYPTION_TTL || 10,
+    srpVerifier);
   const responseData = {
     serverPublicKey: srpServer.getPublicKey(),
     kdfSalt,
