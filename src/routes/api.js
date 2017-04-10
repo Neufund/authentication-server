@@ -54,6 +54,7 @@ router.post('/login-data', validate({ body: loginDataSchema }), catchAsyncErrors
   const srpServer = new jsrp.server();
   await toPromise(srpServer.init.bind(srpServer))({ salt: srpSalt, verifier: srpVerifier });
   const responseData = {
+    serverPrivateKey: srpServer.getPrivateKey(),
     serverPublicKey: srpServer.getPublicKey(),
     kdfSalt,
     srpSalt,
@@ -62,12 +63,17 @@ router.post('/login-data', validate({ body: loginDataSchema }), catchAsyncErrors
 }));
 
 router.post('/login', validate({ body: loginSchema }), catchAsyncErrors(async (req, res) => {
-  const clientPublicKey = req.body.publicKey;
+  const clientPublicKey = req.body.clientPublicKey;
+  const serverPrivateKey = req.body.serverPrivateKey;
   const clientProof = req.body.clientProof;
   const email = req.body.email;
   const { srpSalt, srpVerifier } = await database.getUserByEmailStmt.get({ $email: email });
   const srpServer = new jsrp.server();
-  await toPromise(srpServer.init.bind(srpServer))({ salt: srpSalt, verifier: srpVerifier });
+  await toPromise(srpServer.init.bind(srpServer))({
+    salt: srpSalt,
+    verifier: srpVerifier,
+    b: serverPrivateKey,
+  });
   srpServer.setClientPublicKey(clientPublicKey);
   if (srpServer.checkClientProof(clientProof)) {
     // TODO Issue JWT

@@ -1,6 +1,18 @@
 {
   "type": "object",
   "properties": {
+    "clientProof": {
+      "type": "string"
+    },
+    "clientPublicKey": {
+      "type": "string"
+    },
+    "serverPrivateKey": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    }
   },
   "additionalProperties": false
 }
