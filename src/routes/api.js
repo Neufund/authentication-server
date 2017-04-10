@@ -9,6 +9,7 @@ const jsrp = require('jsrp');
 const Recaptcha = require('recaptcha-verify');
 const { toPromise, catchAsyncErrors } = require('../utils');
 const database = require('../database');
+const authenticatedEncryption = require('../authenticated-encryption');
 
 const signupSchema = JSON.parse(fs.readFileSync('./schemas/signupSchema.json'));
 const loginDataSchema = JSON.parse(fs.readFileSync('./schemas/loginDataSchema.json'));
@@ -53,29 +54,32 @@ router.post('/login-data', validate({ body: loginDataSchema }), catchAsyncErrors
   } = await database.getUserByEmailStmt.get({ $email: email });
   const srpServer = new jsrp.server();
   await toPromise(srpServer.init.bind(srpServer))({ salt: srpSalt, verifier: srpVerifier });
+  const encryptedPart = authenticatedEncryption.encrypt(srpServer.getPrivateKey(), srpVerifier);
   const responseData = {
-    serverPrivateKey: srpServer.getPrivateKey(),
     serverPublicKey: srpServer.getPublicKey(),
     kdfSalt,
     srpSalt,
+    encryptedPart,
   };
   res.send(responseData);
 }));
 
 router.post('/login', validate({ body: loginSchema }), catchAsyncErrors(async (req, res) => {
-  const clientPublicKey = req.body.clientPublicKey;
-  const serverPrivateKey = req.body.serverPrivateKey;
-  const clientProof = req.body.clientProof;
-  const email = req.body.email;
-  const { srpSalt, srpVerifier } = await database.getUserByEmailStmt.get({ $email: email });
+  const { srpSalt, srpVerifier } =
+    await database.getUserByEmailStmt.get({ $email: req.body.email });
+  const decryptionResult = authenticatedEncryption.decrypt(req.body.encryptedPart, srpVerifier);
+  if (!decryptionResult.authOk) {
+    res.status(403).send('Encrypted part integrity check failed');
+    return;
+  }
   const srpServer = new jsrp.server();
   await toPromise(srpServer.init.bind(srpServer))({
     salt: srpSalt,
     verifier: srpVerifier,
-    b: serverPrivateKey,
+    b: decryptionResult.plainText,
   });
-  srpServer.setClientPublicKey(clientPublicKey);
-  if (srpServer.checkClientProof(clientProof)) {
+  srpServer.setClientPublicKey(req.body.clientPublicKey);
+  if (srpServer.checkClientProof(req.body.clientProof)) {
     // TODO Issue JWT
     res.send(srpServer.getProof());
   } else {

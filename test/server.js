@@ -153,6 +153,9 @@ describe('Auth server', () => {
           expect(loginData).to.have.property('serverPublicKey');
           expect(loginData).to.have.property('kdfSalt', userSignupData.kdfSalt);
           expect(loginData).to.have.property('srpSalt', userSignupData.srpSalt);
+          expect(loginData).to.have.deep.property('encryptedPart.cipherText');
+          expect(loginData).to.have.deep.property('encryptedPart.iv');
+          expect(loginData).to.have.deep.property('encryptedPart.tag');
         });
       });
       describe('/api/login', () => {
@@ -176,7 +179,7 @@ describe('Auth server', () => {
           const loginRequestPayload = {
             clientProof: srpClient.getProof(),
             clientPublicKey: srpClient.getPublicKey(),
-            serverPrivateKey: loginData.serverPrivateKey,
+            encryptedPart: loginData.encryptedPart,
             email,
           };
           return chai.request(server)

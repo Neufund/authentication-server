@@ -5,10 +5,22 @@
       "type": "string"
     },
     "clientPublicKey": {
-      "type": "string"
+      "type": "string",
     },
-    "serverPrivateKey": {
-      "type": "string"
+    "encryptedPart": {
+      "type": "object",
+      "properties": {
+        "cipherText": {
+          "type": "string"
+        },
+        "iv": {
+          "type": "string"
+        },
+        "tag": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
     },
     "email": {
       "type": "string"
