@@ -2,9 +2,11 @@
   "type": "object",
   "properties": {
     "email": {
-      "type": "email",
-      "required": true
+      "type": "email"
     }
   },
+  "required": [
+    "email"
+  ],
   "additionalProperties": false
 }
