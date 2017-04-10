@@ -34,13 +34,18 @@
     },
     "email": {
       "type": "email"
+    },
+    "timeBasedOneTimeToken": {
+      "type": "string",
+      "pattern": "^[0-9]{6}$"
     }
   },
   "required": [
     "clientProof",
     "clientPublicKey",
     "encryptedPart",
-    "email"
+    "email",
+    "timeBasedOneTimeToken"
   ],
   "additionalProperties": false
 }

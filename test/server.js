@@ -7,6 +7,7 @@ const app = require('../src');
 const database = require('../src/database');
 const Recaptcha = require('recaptcha-verify');
 const jsrp = require('jsrp');
+const speakeasy = require('speakeasy');
 const scrypt = require('scrypt-async');
 const randomBytes = require('randombytes');
 const sinon = require('sinon');
@@ -138,8 +139,12 @@ describe('Auth server', () => {
       });
     });
     describe('login tests', () => {
+      let timeBasedOneTimeSecret;
+
       beforeEach('Create test user', async () => {
-        await chai.request(server).post(signupUrl).send(userSignupData);
+        timeBasedOneTimeSecret = (
+          await chai.request(server).post(signupUrl).send(userSignupData)
+        ).text;
       });
 
       describe('/api/login-data', () => {
@@ -176,10 +181,15 @@ describe('Auth server', () => {
             resolve));
           srpClient.setSalt(userSignupData.srpSalt);
           srpClient.setServerPublicKey(loginData.serverPublicKey);
+          const timeBasedOneTimeToken = speakeasy.totp({
+            secret: timeBasedOneTimeSecret,
+            encoding: 'base32',
+          });
           const loginRequestPayload = {
             clientProof: srpClient.getProof(),
             clientPublicKey: srpClient.getPublicKey(),
             encryptedPart: loginData.encryptedPart,
+            timeBasedOneTimeToken,
             email,
           };
           return chai.request(server)
@@ -199,6 +209,19 @@ describe('Auth server', () => {
         it('returns correct server proof', async () => {
           const response = await login(passphrase);
           expect(srpClient.checkServerProof(response.text)).to.be.true();
+        });
+        it('fails to log in with wrong 2FA', async () => {
+          const wrongSecret = 'EEWCYWBVM5BWO6DPIVDWIZRKPNKFOJBI';
+          const rightSecret = timeBasedOneTimeSecret;
+          timeBasedOneTimeSecret = wrongSecret;
+          login('some crap').catch((err) => {
+            try {
+              expect(err).to.have.status(403);
+              expect(err.response.text).to.be.equal('2FA authentication failed');
+            } finally {
+              timeBasedOneTimeSecret = rightSecret;
+            }
+          });
         });
       });
     });

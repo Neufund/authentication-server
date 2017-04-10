@@ -65,8 +65,17 @@ router.post('/login-data', validate({ body: loginDataSchema }), catchAsyncErrors
 }));
 
 router.post('/login', validate({ body: loginSchema }), catchAsyncErrors(async (req, res) => {
-  const { srpSalt, srpVerifier } =
+  const { srpSalt, srpVerifier, timeBasedOneTimeSecret } =
     await database.getUserByEmailStmt.get({ $email: req.body.email });
+  const timeBasedOneTimePasswordParams = {
+    secret: timeBasedOneTimeSecret,
+    encoding: 'base32',
+    token: req.body.timeBasedOneTimeToken,
+  };
+  if (!speakeasy.totp.verify(timeBasedOneTimePasswordParams)) {
+    res.status(403).send('2FA authentication failed');
+    return;
+  }
   const decryptionResult = authenticatedEncryption.decrypt(req.body.encryptedPart, srpVerifier);
   if (!decryptionResult.authOk) {
     res.status(403).send('Encrypted part integrity check failed');
