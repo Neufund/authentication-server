@@ -46,27 +46,27 @@ yarn start
 
 ## How to use
 
-You can find a client-side library here: [authentication-client](git@github.com:Neufund/authentication-client.git)
+You can find a client-side library here: [authentication-client](https://github.com/Neufund/authentication-client)
 
 
 ## Specification
 
 ### Database Schema
 
-|        Column        |   Type   |                      Description                      |
-|----------------------|----------|-------------------------------------------------------|
-| `created`            | datetime | Timestamp of account signup, does not change          |
-| `updated`            | datetime | Timestamp of last change                              |
-| `used`               | datetime | Timestamp of last login                               |
-| `enabled`            | bool     | Admin toggle for enabling/disabling accounts          |
-| `email`              | string   | Account email address                                 |
-| `email_new`          | string   | Newly submitted, but unconfirmed email address        |
-| `email_token`        | string   | Email address confirmation token (empty if confirmed) |
-| `email_token_expiry` | datetime | Validity for email token                              |
-| `kdf_salt`           | bytes    | Salt used for SCrypt                                  |
-| `srp_salt`           | bytes    | Salt used for SRP                                     |
-| `verifier`           | bytes    | SRP Verifier                                          |
-| `totp`               | bytes    | Time-based one-time-password secret                   |
+
+|        Column           |   Type    |                      Description           |
+|-------------------------|-----------|--------------------------------------------|
+| `id`                    | integer   | User id                                    |
+| `email`                 | text      | Email                                      |
+| `newEmail`              | text      | New unconfirmed email                      |
+| `emailToken`            | text      | Email confirmation token                   |
+| `created`               | timestamp | Creation time                              |
+| `updated`               | timestamp | Last update time                           |
+| `lastUsed`              | timestamp | Last usage time)                           |
+| `kdfSalt`               | blob      | Key derivation function salt               |
+| `srpSalt`               | blob      | SRP salt                                   |
+| `srpVerifier`           | blob      | SRP verifier                               |
+| `totpSecret`            | boob      | Time bases one time passsword secret (2FA) |   
 
 ### Parameters
 
@@ -91,35 +91,47 @@ The result taken in raw `binary` form. 256 bit random salt.
 
 Note: Captcha prevents this from automated detecting user existence
 
-1. User: generates random 32 byte `kdf_salt`
-1. User: generates random 32 byte `srp_salt`
-5. User: `key = scrypt(password, kdf_salt)`
-6. User: `verifier = SRP6A_verifier(email, key, srp_salt)`
-3. User submits
+1. User: generates random 32 byte `kdfSalt`
+2. User: generates random 32 byte `srpSalt`
+3. User: `key = scrypt(password, kdfSalt)`
+4. User: `verifier = SRP6A_verifier(email, key, srpSalt)`
+5. User calls `/api/signup` with:
     * `email`
-    * `kdf_salt`
-    * `srp_salt`
+    * `kdfSalt`
+    * `srpSalt`
     * `verifier`
-    * recaptcha token
-6. Server validate recaptcha
-7. Server creates new user with submitted data
+    * `captcha`
+6. Server validates recaptcha
+7. Server generates `totpSecret`
+8. Server creates new user with submitted data
+9. Server returns `totpSecret`
 
 ### Log-in
 
-1. User calls `/challenge` with `email`
-    2. Server looks up `kdf_salt` & `srp_salt` and `verifier`
-2. Server: `challenge = SRP6A_challenge(kdf_salt, verifier)`
-3. Server responds:
-    * `kdf_salt`
-    * `srp_salt`
-    * `challenge`
-    * `mac`
-5. User: `key = scrypt(password, kdf_salt)`
-6. User: `response = SRP6A_response(challenge, srp_salt, key)`
-7. User submits `/response`:
+1. User calls `/api/login-data` with:
     * `email`
-    * `mac(challenge)`
-
+2. Server responds with:
+    * `kdfSalt`
+    * `srpSalt`
+    * `serverPublicKey`
+    * encrypted and authenticated:
+        * `serverPrivateKey`
+3. User calls `/api/login` with:
+    * `clientProof`
+    * `clientPublicKey`
+    * `email`
+    * `timeBasedOneTimeToken`
+    * encrypted and authenticated:
+        * `serverPrivateKey`
+4. Server verifies all the data and checks:
+    * the client proof
+    * integrity of encrypted part
+    * 2FA token
+5. Server issues the JSON Web Token
+6. Server returns:
+    * `token`
+    * `serverProof`
+7. Client verifies server proof
 
 ## FAQ
 
