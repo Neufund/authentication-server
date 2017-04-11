@@ -5,7 +5,7 @@ const router = require('express').Router();
 const validate = require('express-jsonschema').validate;
 const speakeasy = require('speakeasy');
 const fs = require('fs');
-const jsrp = require('jsrp');
+const jsrp = require('jsrp-server-fast');
 const jwt = require('jsonwebtoken');
 const Recaptcha = require('recaptcha-verify');
 const { toPromise, catchAsyncErrors } = require('../utils');
@@ -54,7 +54,11 @@ router.post('/login-data', validate({ body: loginDataSchema }), catchAsyncErrors
     srpVerifier,
   } = await database.getUserByEmailStmt.get({ $email: email });
   const srpServer = new jsrp.server();
-  await toPromise(srpServer.init.bind(srpServer))({ salt: srpSalt, verifier: srpVerifier });
+  await toPromise(srpServer.init.bind(srpServer))({
+    salt: srpSalt,
+    verifier: srpVerifier,
+    length: 4096,
+  });
   const encryptedPart = authenticatedEncryption.encrypt(
     srpServer.getPrivateKey(),
     process.env.ENCRYPTION_TTL || 10,
@@ -91,6 +95,7 @@ router.post('/login', validate({ body: loginSchema }), catchAsyncErrors(async (r
     salt: srpSalt,
     verifier: srpVerifier,
     b: decryptionResult.plainText,
+    length: 4096,
   });
   srpServer.setClientPublicKey(req.body.clientPublicKey);
   if (srpServer.checkClientProof(req.body.clientProof)) {

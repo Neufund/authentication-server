@@ -7,7 +7,7 @@
     },
     "clientPublicKey": {
       "type": "string",
-      "pattern": "^[0-9a-f]{1024}$"
+      "pattern": "^[0-9a-f]*$"
     },
     "encryptedPart": {
       "type": "object",
