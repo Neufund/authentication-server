@@ -42,7 +42,7 @@
     "express": "^4.15.2",
     "express-jsonschema": "^1.1.6",
     "jsonwebtoken": "^7.3.0",
-    "jsrp-server-fast": "^0.2.3",
+    "jsrp-server-fast": "0.2.3-beta.1",
     "randombytes": "^2.0.3",
     "recaptcha-verify": "^0.1.1",
     "scrypt-async": "^1.3.1",
