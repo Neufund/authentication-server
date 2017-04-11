@@ -5,8 +5,12 @@ let userInsertStmt;
 let getUserByEmailStmt;
 
 const init = async () => {
-  await db.open(':memory:', { Promise, versobe: process.env.VERBOSE || false });
-  await db.migrate();
+  if (process.env.NODE_ENV === 'production') {
+    await db.open(process.env.DB_PATH, { Promise, versobe: process.env.VERBOSE || false });
+  } else {
+    await db.open(':memory:', { Promise, versobe: process.env.VERBOSE || false });
+    await db.migrate();
+  }
   userInsertStmt = await db.prepare(
     `INSERT INTO Users (email, kdfSalt, srpSalt, srpVerifier, totpSecret)
                 VALUES ($email, $kdfSalt, $srpSalt, $srpVerifier, $totpSecret)`);
