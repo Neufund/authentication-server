@@ -17,11 +17,6 @@ const loginDataSchema = JSON.parse(fs.readFileSync('./schemas/loginDataSchema.js
 const loginSchema = JSON.parse(fs.readFileSync('./schemas/loginSchema.json'));
 const jwtPrivateKey = fs.readFileSync('./ec512.prv.pem');
 
-// TODO: Remove this debug endpoint
-router.get('/', async (req, res) => {
-  res.send(await database.db.all('SELECT * FROM Users'));
-});
-
 router.post('/signup', validate({ body: signupSchema }), catchAsyncErrors(async (req, res) => {
   const recaptcha = new Recaptcha({
     secret: process.env.RECAPTCHA_SECRET_KEY,
