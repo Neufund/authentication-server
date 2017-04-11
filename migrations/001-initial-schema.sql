@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS Users (
     kdfSalt BLOB NOT NULL,
     srpSalt BLOB NOT NULL,
     srpVerifier BLOB NOT NULL,
-    timeBasedOneTimeSecret BLOB NOT NULL
+    totpSecret BLOB NOT NULL
 );
 
 -- Down

@@ -33,17 +33,17 @@ router.post('/signup', validate({ body: signupSchema }), catchAsyncErrors(async 
     res.status(400).send('reCAPTCHA verification failed');
     return;
   }
-  const timeBasedOneTimeSecret = speakeasy.generateSecret({ length: 20 });
-  const $timeBasedOneTimeSecret = timeBasedOneTimeSecret.base32;
+  const totpSecret = speakeasy.generateSecret({ length: 20 });
+  const $totpSecret = totpSecret.base32;
   const queryParams = {
     $email: req.body.email,
     $kdfSalt: req.body.kdfSalt,
     $srpSalt: req.body.srpSalt,
     $srpVerifier: req.body.srpVerifier,
-    $timeBasedOneTimeSecret,
+    $totpSecret,
   };
   await database.userInsertStmt.run(queryParams);
-  res.send($timeBasedOneTimeSecret);
+  res.send($totpSecret);
 }));
 
 router.post('/login-data', validate({ body: loginDataSchema }), catchAsyncErrors(async (req, res) => {
@@ -74,10 +74,10 @@ router.post('/login-data', validate({ body: loginDataSchema }), catchAsyncErrors
 
 router.post('/login', validate({ body: loginSchema }), catchAsyncErrors(async (req, res) => {
   const email = req.body.email;
-  const { srpSalt, srpVerifier, timeBasedOneTimeSecret } =
+  const { srpSalt, srpVerifier, totpSecret } =
     await database.getUserByEmailStmt.get({ $email: email });
   const timeBasedOneTimePasswordParams = {
-    secret: timeBasedOneTimeSecret,
+    secret: totpSecret,
     encoding: 'base32',
     token: req.body.timeBasedOneTimeToken,
   };

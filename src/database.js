@@ -8,8 +8,8 @@ const init = async () => {
   await db.open(':memory:', { Promise, versobe: process.env.VERBOSE || false });
   await db.migrate();
   userInsertStmt = await db.prepare(
-    `INSERT INTO Users (email, kdfSalt, srpSalt, srpVerifier, timeBasedOneTimeSecret)
-                VALUES ($email, $kdfSalt, $srpSalt, $srpVerifier, $timeBasedOneTimeSecret)`);
+    `INSERT INTO Users (email, kdfSalt, srpSalt, srpVerifier, totpSecret)
+                VALUES ($email, $kdfSalt, $srpSalt, $srpVerifier, $totpSecret)`);
   getUserByEmailStmt = await db.prepare('SELECT * FROM Users WHERE email = $email');
 };
 

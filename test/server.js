@@ -133,7 +133,7 @@ describe('Auth server', () => {
         expect(user).to.have.property('created');
         expect(user).to.have.property('updated');
         expect(user).to.have.property('lastUsed');
-        expect(user).to.have.property('timeBasedOneTimeSecret');
+        expect(user).to.have.property('totpSecret');
       });
       it('returns OTP code', async () => {
         const res = await chai.request(server).post(url).send(Object.assign(userSignupData));
@@ -141,10 +141,10 @@ describe('Auth server', () => {
       });
     });
     describe('login tests', () => {
-      let timeBasedOneTimeSecret;
+      let totpSecret;
 
       beforeEach('Create test user', async () => {
-        timeBasedOneTimeSecret = (
+        totpSecret = (
           await chai.request(server).post(signupUrl).send(userSignupData)
         ).text;
       });
@@ -184,7 +184,7 @@ describe('Auth server', () => {
           srpClient.setSalt(userSignupData.srpSalt);
           srpClient.setServerPublicKey(loginData.serverPublicKey);
           const timeBasedOneTimeToken = speakeasy.totp({
-            secret: timeBasedOneTimeSecret,
+            secret: totpSecret,
             encoding: 'base32',
           });
           const loginRequestPayload = {
@@ -214,14 +214,14 @@ describe('Auth server', () => {
         });
         it('fails to log in with wrong 2FA', async () => {
           const wrongSecret = 'EEWCYWBVM5BWO6DPIVDWIZRKPNKFOJBI';
-          const rightSecret = timeBasedOneTimeSecret;
-          timeBasedOneTimeSecret = wrongSecret;
+          const rightSecret = totpSecret;
+          totpSecret = wrongSecret;
           login('some crap').catch((err) => {
             try {
               expect(err).to.have.status(403);
               expect(err.response.text).to.be.equal('2FA authentication failed');
             } finally {
-              timeBasedOneTimeSecret = rightSecret;
+              totpSecret = rightSecret;
             }
           });
         });
