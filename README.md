@@ -1,5 +1,7 @@
 # authentication-server-node [![Build Status](https://travis-ci.org/Neufund/authentication-server-node.svg)](https://travis-ci.org/Neufund/authentication-server-node)
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/Neufund/authentication-server.svg)](https://greenkeeper.io/)
+
 JWT Authentication server using email, password, captcha and Google Authenticator
 
 Main Features:
