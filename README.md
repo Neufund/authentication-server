@@ -1,4 +1,4 @@
-# authentication-server-node [![Build Status](https://travis-ci.org/Neufund/authentication-server-node.svg)](https://travis-ci.org/Neufund/authentication-server-node)
+# authentication-server-node [![Build Status](https://travis-ci.org/Neufund/authentication-server.svg)](https://travis-ci.org/Neufund/authentication-server)
 
 [![Greenkeeper badge](https://badges.greenkeeper.io/Neufund/authentication-server.svg)](https://greenkeeper.io/)
 
