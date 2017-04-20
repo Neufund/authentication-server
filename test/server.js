@@ -118,12 +118,12 @@ describe('Auth server', () => {
         });
       });
       it('stores user data in DB', async () => {
-        await chai.request(server).post(url).send(Object.assign(userSignupData));
+        await chai.request(server).post(url).send(userSignupData);
         const users = await database.db.all('SELECT * FROM Users');
         expect(users).to.have.lengthOf(1);
         const user = users[0];
         expect(user).to.not.have.property('captcha');
-        expect(user).to.have.property('id', 1);
+        expect(user).to.have.property('uuid');
         expect(user).to.have.property('email', userSignupData.email);
         expect(user).to.have.property('newEmail', null);
         expect(user).to.have.property('emailToken', null);
@@ -135,8 +135,18 @@ describe('Auth server', () => {
         expect(user).to.have.property('lastUsed');
         expect(user).to.have.property('totpSecret');
       });
+      it('generates random uuids for users', async () => {
+        await chai.request(server).post(url).send(Object.assign({}, userSignupData, { email: 'user1@example.com' }));
+        await chai.request(server).post(url).send(Object.assign({}, userSignupData, { email: 'user2@example.com' }));
+        const users = await database.db.all('SELECT * FROM Users');
+        const uuids = users.map(user => user.uuid);
+        expect(uuids[0]).to.not.be.equal(uuids[1]);
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        expect(uuids[0]).to.match(uuidRegex);
+        expect(uuids[1]).to.match(uuidRegex);
+      });
       it('returns OTP code', async () => {
-        const res = await chai.request(server).post(url).send(Object.assign(userSignupData));
+        const res = await chai.request(server).post(url).send(userSignupData);
         expect(res.text).to.have.lengthOf(32);
       });
     });

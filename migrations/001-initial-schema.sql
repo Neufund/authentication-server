@@ -1,6 +1,6 @@
 -- Up
 CREATE TABLE IF NOT EXISTS Users (
-    id INTEGER PRIMARY KEY ASC,
+    uuid TEXT PRIMARY KEY,
     email TEXT UNIQUE NOT NULL,
     newEmail TEXT UNIQUE,
     emailToken TEXT,
@@ -13,5 +13,8 @@ CREATE TABLE IF NOT EXISTS Users (
     totpSecret BLOB NOT NULL
 );
 
+CREATE INDEX IF NOT EXISTS user_email_idx ON Users (email);
+
 -- Down
-DROP TABLE Users;
+DROP INDEX IF EXISTS user_email_idx;
+DROP TABLE IF EXISTS Users;

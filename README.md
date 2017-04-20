@@ -58,7 +58,7 @@ You can find a client-side library here: [authentication-client](https://github.
 
 |        Column           |   Type    |                      Description           |
 |-------------------------|-----------|--------------------------------------------|
-| `id`                    | integer   | User id                                    |
+| `uuid`                  | text      | UuidV4                                     |
 | `email`                 | text      | Email                                      |
 | `newEmail`              | text      | New unconfirmed email                      |
 | `emailToken`            | text      | Email confirmation token                   |

@@ -7,6 +7,7 @@ const speakeasy = require('speakeasy');
 const fs = require('fs');
 const jsrp = require('jsrp-server-fast');
 const jwt = require('jsonwebtoken');
+const uuidV4 = require('uuid/v4');
 const Recaptcha = require('recaptcha-verify');
 const { toPromise, catchAsyncErrors } = require('../utils');
 const database = require('../database');
@@ -31,6 +32,7 @@ router.post('/signup', validate({ body: signupSchema }), catchAsyncErrors(async 
   const totpSecret = speakeasy.generateSecret({ length: 20 });
   const $totpSecret = totpSecret.base32;
   const queryParams = {
+    $uuid: uuidV4(),
     $email: req.body.email,
     $kdfSalt: req.body.kdfSalt,
     $srpSalt: req.body.srpSalt,
@@ -69,7 +71,7 @@ router.post('/login-data', validate({ body: loginDataSchema }), catchAsyncErrors
 
 router.post('/login', validate({ body: loginSchema }), catchAsyncErrors(async (req, res) => {
   const email = req.body.email;
-  const { srpSalt, srpVerifier, totpSecret } =
+  const { srpSalt, srpVerifier, totpSecret, uuid } =
     await database.getUserByEmailStmt.get({ $email: email });
   const timeBasedOneTimePasswordParams = {
     secret: totpSecret,
@@ -94,7 +96,7 @@ router.post('/login', validate({ body: loginSchema }), catchAsyncErrors(async (r
   });
   srpServer.setClientPublicKey(req.body.clientPublicKey);
   if (srpServer.checkClientProof(req.body.clientProof)) {
-    const jwtPayload = { email, loginMethod: '2FA' };
+    const jwtPayload = { email, loginMethod: '2FA', uuid };
     const jwtOptions = {
       issuer: 'Neufund',
       algorithm: 'ES512',

@@ -12,8 +12,8 @@ const init = async () => {
     await db.migrate();
   }
   userInsertStmt = await db.prepare(
-    `INSERT INTO Users (email, kdfSalt, srpSalt, srpVerifier, totpSecret)
-                VALUES ($email, $kdfSalt, $srpSalt, $srpVerifier, $totpSecret)`);
+    `INSERT INTO Users (uuid, email, kdfSalt, srpSalt, srpVerifier, totpSecret)
+                VALUES ($uuid, $email, $kdfSalt, $srpSalt, $srpVerifier, $totpSecret)`);
   getUserByEmailStmt = await db.prepare('SELECT * FROM Users WHERE email = $email');
 };
 
