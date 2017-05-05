@@ -13,7 +13,8 @@ const init = async () => {
   }
   userInsertStmt = await db.prepare(
     `INSERT INTO Users (uuid, email, kdfSalt, srpSalt, srpVerifier, totpSecret)
-                VALUES ($uuid, $email, $kdfSalt, $srpSalt, $srpVerifier, $totpSecret)`);
+                VALUES ($uuid, $email, $kdfSalt, $srpSalt, $srpVerifier, $totpSecret)`
+  );
   getUserByEmailStmt = await db.prepare('SELECT * FROM Users WHERE email = $email');
 };
 

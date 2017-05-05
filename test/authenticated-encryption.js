@@ -39,7 +39,7 @@ describe('Authenticated encryption', () => {
       try {
         const ttl = 10;
         const encrypted = authenticatedEncryption.encrypt('plaintext', ttl);
-        clock.tick(((ttl + 5) * 1000)); // go 15s to the future
+        clock.tick((ttl + 5) * 1000); // go 15s to the future
         const decrypted = authenticatedEncryption.decrypt(encrypted);
         expect(decrypted.authOk).to.be.false();
       } finally {
@@ -51,7 +51,7 @@ describe('Authenticated encryption', () => {
       try {
         const ttl = 10;
         const encrypted = authenticatedEncryption.encrypt('plaintext', ttl);
-        clock.tick(((ttl + 5) * 1000)); // go 15s to the future
+        clock.tick((ttl + 5) * 1000); // go 15s to the future
         encrypted.expiresAt += 10; // non authenticated expiresAt
         const decrypted = authenticatedEncryption.decrypt(encrypted);
         expect(decrypted.authOk).to.be.false();

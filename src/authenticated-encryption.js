@@ -16,7 +16,6 @@ function getTimeStamp() {
 
 // encrypt/decrypt functions
 module.exports = {
-
   /**
    * @typedef {Object} EncryptionResult
    * @property {String} cipherText - the hex encoded encrypted data
