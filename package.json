@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/index.js",
     "lint": "eslint .",
-    "test": "mocha --delay"
+    "test": "node --harmony ./node_modules/.bin/istanbul cover _mocha --delay"
   },
   "repository": {
     "type": "git",
@@ -33,6 +33,7 @@
     "eslint-plugin-import": "^2.2.0",
     "eslint-plugin-jsx-a11y": "^4.0.0",
     "eslint-plugin-react": "^6.10.3",
+    "istanbul": "next",
     "mocha": "^3.2.0",
     "sinon": "^2.1.0"
   },
