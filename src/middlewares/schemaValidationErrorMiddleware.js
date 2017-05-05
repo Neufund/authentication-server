@@ -1,26 +1,19 @@
 const winston = require('winston');
 
 module.exports = (err, req, res, next) => {
-  let responseData;
-
   if (err.name === 'JsonSchemaValidation') {
-    // logs "express-jsonschema: Invalid data found"
+    // Logs "express-jsonschema: Invalid data found"
     winston.warning(err.message);
 
-    // Set a bad request http response status or whatever you want
+    // Reply with error
     res.status(400);
-
-    // Format the response body however you want
-    responseData = {
+    res.json({
       statusText: 'Bad Request',
       jsonSchemaValidation: true,
-      validations: err.validations,  // All of your validation information
-    };
-
-    res.json(responseData);
+      validations: err.validations,
+    });
   } else {
     // pass error to next error middleware handler
     next(err);
   }
 };
-
