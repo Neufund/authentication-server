@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "lint": "eslint .",
+    "lint": "eslint --ignore-path .gitignore .",
     "test": "node --harmony ./node_modules/.bin/istanbul cover _mocha --delay"
   },
   "repository": {
