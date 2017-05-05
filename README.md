@@ -1,7 +1,5 @@
-# authentication-server [![Build Status](https://travis-ci.org/Neufund/authentication-server.svg)](https://travis-ci.org/Neufund/authentication-server)
-[![Greenkeeper badge](https://badges.greenkeeper.io/Neufund/authentication-server.svg)](https://greenkeeper.io/)
-[![](https://images.microbadger.com/badges/image/neufund/authentication-server.svg)](https://microbadger.com/images/neufund/authentication-server)
-[![](https://images.microbadger.com/badges/version/neufund/authentication-server.svg)](https://microbadger.com/images/neufund/authentication-server)
+# authentication-server
+[![Build Status](https://travis-ci.org/Neufund/authentication-server.svg)](https://travis-ci.org/Neufund/authentication-server)  [![codecov](https://codecov.io/gh/Neufund/authentication-server/branch/master/graph/badge.svg)](https://codecov.io/gh/Neufund/authentication-server)  [![Greenkeeper badge](https://badges.greenkeeper.io/Neufund/authentication-server.svg)](https://greenkeeper.io/)  [![](https://images.microbadger.com/badges/image/neufund/authentication-server.svg)](https://microbadger.com/images/neufund/authentication-server)  [![](https://images.microbadger.com/badges/version/neufund/authentication-server.svg)](https://microbadger.com/images/neufund/authentication-server)
 
 JWT Authentication server using email, password, captcha and Google Authenticator
 
