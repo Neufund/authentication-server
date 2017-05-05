@@ -1,0 +1,55 @@
+{
+  "type": "object",
+  "properties": {
+    "clientProof": {
+      "type": "string",
+      "pattern": "^[0-9a-f]*$"
+    },
+    "clientPublicKey": {
+      "type": "string",
+      "pattern": "^[0-9a-f]*$"
+    },
+    "encryptedPart": {
+      "type": "object",
+      "properties": {
+        "cipherText": {
+          "type": "string",
+          "pattern": "^[0-9a-f]*$"
+        },
+        "iv": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{24}$"
+        },
+        "tag": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{32}$"
+        },
+        "expiresAt": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "cipherText",
+        "iv",
+        "tag",
+        "expiresAt"
+      ],
+      "additionalProperties": false
+    },
+    "email": {
+      "type": "email"
+    },
+    "timeBasedOneTimeToken": {
+      "type": "string",
+      "pattern": "^[0-9]{6}$"
+    }
+  },
+  "required": [
+    "clientProof",
+    "clientPublicKey",
+    "encryptedPart",
+    "email",
+    "timeBasedOneTimeToken"
+  ],
+  "additionalProperties": false
+}

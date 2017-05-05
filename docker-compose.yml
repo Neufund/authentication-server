@@ -1,0 +1,10 @@
+version: '2'
+services:
+  srp-auth-server:
+    build: .
+    ports:
+      - "80:3000"
+    env_file:
+      - ./config.env
+    volumes:
+      - ./ec512.prv.pem:/usr/src/app/ec512.prv.pem

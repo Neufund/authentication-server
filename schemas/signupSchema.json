@@ -1,0 +1,31 @@
+{
+  "type": "object",
+  "properties": {
+    "email": {
+      "type": "email"
+    },
+    "kdfSalt": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}"
+    },
+    "srpSalt": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}"
+    },
+    "srpVerifier": {
+      "type": "string",
+      "pattern": "^[0-9a-f]*"
+    },
+    "captcha": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "email",
+    "kdfSalt",
+    "srpSalt",
+    "captcha",
+    "srpVerifier"
+  ],
+  "additionalProperties": false
+}
