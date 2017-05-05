@@ -11,4 +11,5 @@ install:
   - yarn
 script:
   - yarn test
+  - yarn run -- codecov
   - yarn lint
