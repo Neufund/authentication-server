@@ -6,14 +6,15 @@ let getUserByEmailStmt;
 
 const init = async () => {
   if (process.env.NODE_ENV === 'production') {
-    await db.open(process.env.DB_PATH, { Promise, versobe: process.env.VERBOSE || false });
+    await db.open(process.env.DB_PATH, { Promise, verbose: process.env.VERBOSE || false });
   } else {
-    await db.open(':memory:', { Promise, versobe: process.env.VERBOSE || false });
+    await db.open(':memory:', { Promise, verbose: process.env.VERBOSE || false });
     await db.migrate();
   }
   userInsertStmt = await db.prepare(
     `INSERT INTO Users (uuid, email, kdfSalt, srpSalt, srpVerifier, totpSecret)
-                VALUES ($uuid, $email, $kdfSalt, $srpSalt, $srpVerifier, $totpSecret)`);
+                VALUES ($uuid, $email, $kdfSalt, $srpSalt, $srpVerifier, $totpSecret)`
+  );
   getUserByEmailStmt = await db.prepare('SELECT * FROM Users WHERE email = $email');
 };
 

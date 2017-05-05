@@ -3,6 +3,7 @@
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const dirtyChai = require('dirty-chai');
+const chaiAsPromised = require('chai-as-promised');
 const app = require('../src');
 const database = require('../src/database');
 const Recaptcha = require('recaptcha-verify');
@@ -18,6 +19,7 @@ const winston = require('winston');
 const expect = chai.expect;
 chai.use(chaiHttp);
 chai.use(dirtyChai);
+chai.use(chaiAsPromised);
 
 winston.remove(winston.transports.Console);
 
@@ -31,9 +33,11 @@ async function srpRegister(username, passphrase) {
   };
   const srpClient = new jsrp.client();
   await new Promise(resolve => srpClient.init(parameters, resolve));
+
+  // FIXME: For some reason toPromise does not work on srpClient.createVerifier
   return new Promise((resolve, reject) =>
-    srpClient.createVerifier((err, result) =>
-      (err ? reject(err) : resolve(result))));
+    srpClient.createVerifier((err, result) => (err ? reject(err) : resolve(result)))
+  );
 }
 
 let server;
@@ -54,7 +58,7 @@ async function hashPassphrase(pass) {
     dkLen: 16,
     encoding: 'binary',
   };
-  return new Promise(resolve => (scrypt(pass, kdfSalt, scryptParameters, resolve)));
+  return new Promise(resolve => scrypt(pass, kdfSalt, scryptParameters, resolve));
 }
 
 async function init() {
@@ -88,7 +92,9 @@ describe('Auth server', () => {
     before('stub captcha verification', () => {
       sinon.stub(Recaptcha.prototype, 'checkResponse').callsFake((userResponse, callback) => {
         const data = { success: userResponse === 'goodCaptcha' };
-        if (data.success) { data['error-codes'] = 'mockError'; }
+        if (data.success) {
+          data['error-codes'] = 'mockError';
+        }
         callback(null, data);
       });
     });
@@ -100,18 +106,20 @@ describe('Auth server', () => {
     describe('/api/signup', () => {
       const url = signupUrl;
 
-      it('validates schema', async () => (
-        chai.request(server).post(url).catch(err => expect(err).to.have.status(400))
-      ));
+      it('validates schema', async () =>
+        expect(chai.request(server).post(url)).to.be.rejectedWith('Bad Request').then((error) => {
+          expect(error).to.have.property('status', 400);
+        }));
       describe('should check captcha', () => {
-        it('throws an error on wrong captcha', async () => (
-          chai.request(server).post(url)
+        it('throws an error on wrong captcha', async () =>
+          chai
+            .request(server)
+            .post(url)
             .send(Object.assign({}, userSignupData, { captcha: 'wrongCaptcha' }))
             .catch((err) => {
               expect(err).to.have.status(400);
               expect(err.response.text).equal('reCAPTCHA verification failed');
-            })
-        ));
+            }));
         it('succeeds with good captcha', async () => {
           const res = await chai.request(server).post(url).send(userSignupData);
           expect(res).to.have.status(200);
@@ -136,8 +144,14 @@ describe('Auth server', () => {
         expect(user).to.have.property('totpSecret');
       });
       it('generates random uuids for users', async () => {
-        await chai.request(server).post(url).send(Object.assign({}, userSignupData, { email: 'user1@example.com' }));
-        await chai.request(server).post(url).send(Object.assign({}, userSignupData, { email: 'user2@example.com' }));
+        await chai
+          .request(server)
+          .post(url)
+          .send(Object.assign({}, userSignupData, { email: 'user1@example.com' }));
+        await chai
+          .request(server)
+          .post(url)
+          .send(Object.assign({}, userSignupData, { email: 'user2@example.com' }));
         const users = await database.db.all('SELECT * FROM Users');
         const uuids = users.map(user => user.uuid);
         expect(uuids[0]).to.not.be.equal(uuids[1]);
@@ -154,17 +168,17 @@ describe('Auth server', () => {
       let totpSecret;
 
       beforeEach('Create test user', async () => {
-        totpSecret = (
-          await chai.request(server).post(signupUrl).send(userSignupData)
-        ).text;
+        totpSecret = (await chai.request(server).post(signupUrl).send(userSignupData)).text;
       });
 
       describe('/api/login-data', () => {
         const url = '/api/login-data';
 
         it('gets user login data', async () => {
-          const loginDataResponse = await chai.request(server)
-            .post(url).send({ email: userSignupData.email });
+          const loginDataResponse = await chai
+            .request(server)
+            .post(url)
+            .send({ email: userSignupData.email });
           expect(loginDataResponse).to.have.status(200);
           const loginData = loginDataResponse.body;
           expect(loginData).to.have.property('serverPublicKey');
@@ -181,16 +195,15 @@ describe('Auth server', () => {
         let srpClient;
 
         beforeEach('get login data', async () => {
-          loginData = (await chai.request(server)
-            .post('/api/login-data').send({ email })).body;
+          loginData = (await chai.request(server).post('/api/login-data').send({ email })).body;
         });
 
         async function login(password) {
           srpClient = new jsrp.client();
           const hashedPassword = await hashPassphrase(password);
-          await new Promise(resolve => srpClient.init(
-            Object.assign({}, srpParameters, { password: hashedPassword }),
-            resolve));
+          await new Promise(resolve =>
+            srpClient.init(Object.assign({}, srpParameters, { password: hashedPassword }), resolve)
+          );
           srpClient.setSalt(userSignupData.srpSalt);
           srpClient.setServerPublicKey(loginData.serverPublicKey);
           const timeBasedOneTimeToken = speakeasy.totp({
@@ -204,20 +217,29 @@ describe('Auth server', () => {
             timeBasedOneTimeToken,
             email,
           };
-          return chai.request(server)
-            .post(url).send(loginRequestPayload);
+          return chai.request(server).post(url).send(loginRequestPayload);
         }
 
         it('logs in with correct password', async () => {
           const response = await login(passphrase);
           expect(response).to.have.status(200);
         });
-        it('fails to log in with wrong password', async () => (
-          login('some crap').catch((err) => {
-            expect(err).to.have.status(403);
-            expect(err.response.text).to.be.equal('Login failed');
-          })
-        ));
+        it('fails to log in with wrong password', async () =>
+          expect(login('some crap')).to.be.rejectedWith('Forbidden').then((error) => {
+            expect(error).to.have.property('status', 403);
+            expect(error).to.have.property('response').and.have.property('text', 'Login failed');
+          }));
+        it('fails to log in with wrong login token', async () => {
+          const old = loginData.encryptedPart.expiresAt;
+          loginData.encryptedPart.expiresAt += 1;
+          await expect(login(passphrase)).to.be.rejectedWith('Forbidden').then((error) => {
+            expect(error).to.have.property('status', 403);
+            expect(error).to.have
+              .property('response')
+              .and.have.property('text', 'Encrypted part integrity check failed');
+          });
+          loginData.encryptedPart.expiresAt = old;
+        });
         it('returns correct server proof', async () => {
           const response = await login(passphrase);
           expect(srpClient.checkServerProof(response.body.serverProof)).to.be.true();
@@ -226,14 +248,11 @@ describe('Auth server', () => {
           const wrongSecret = 'EEWCYWBVM5BWO6DPIVDWIZRKPNKFOJBI';
           const rightSecret = totpSecret;
           totpSecret = wrongSecret;
-          login('some crap').catch((err) => {
-            try {
-              expect(err).to.have.status(403);
-              expect(err.response.text).to.be.equal('2FA authentication failed');
-            } finally {
-              totpSecret = rightSecret;
-            }
+          await expect(login('some crap')).to.be.rejectedWith('Forbidden').then((err) => {
+            expect(err).to.have.status(403);
+            expect(err.response.text).to.be.equal('2FA authentication failed');
           });
+          totpSecret = rightSecret;
         });
         it('returns correct jwt', async () => {
           const jwtPublicKey = fs.readFileSync('./ec512.pub.pem');
