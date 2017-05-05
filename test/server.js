@@ -3,6 +3,7 @@
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const dirtyChai = require('dirty-chai');
+const chaiAsPromised = require('chai-as-promised');
 const app = require('../src');
 const database = require('../src/database');
 const Recaptcha = require('recaptcha-verify');
@@ -18,6 +19,7 @@ const winston = require('winston');
 const expect = chai.expect;
 chai.use(chaiHttp);
 chai.use(dirtyChai);
+chai.use(chaiAsPromised);
 
 winston.remove(winston.transports.Console);
 
@@ -31,6 +33,8 @@ async function srpRegister(username, passphrase) {
   };
   const srpClient = new jsrp.client();
   await new Promise(resolve => srpClient.init(parameters, resolve));
+
+  // FIXME: For some reason toPromise does not work on srpClient.createVerifier
   return new Promise((resolve, reject) =>
     srpClient.createVerifier((err, result) => (err ? reject(err) : resolve(result)))
   );
@@ -103,7 +107,9 @@ describe('Auth server', () => {
       const url = signupUrl;
 
       it('validates schema', async () =>
-        chai.request(server).post(url).catch(err => expect(err).to.have.status(400)));
+        expect(chai.request(server).post(url)).to.be.rejectedWith('Bad Request').then((error) => {
+          expect(error).to.have.property('status', 400);
+        }));
       describe('should check captcha', () => {
         it('throws an error on wrong captcha', async () =>
           chai
@@ -219,9 +225,9 @@ describe('Auth server', () => {
           expect(response).to.have.status(200);
         });
         it('fails to log in with wrong password', async () =>
-          login('some crap').catch((err) => {
-            expect(err).to.have.status(403);
-            expect(err.response.text).to.be.equal('Login failed');
+          expect(login('some crap')).to.be.rejectedWith('Forbidden').then((error) => {
+            expect(error).to.have.property('status', 403);
+            expect(error).to.have.property('response').and.have.property('text', 'Login failed');
           }));
         it('returns correct server proof', async () => {
           const response = await login(passphrase);
@@ -231,14 +237,11 @@ describe('Auth server', () => {
           const wrongSecret = 'EEWCYWBVM5BWO6DPIVDWIZRKPNKFOJBI';
           const rightSecret = totpSecret;
           totpSecret = wrongSecret;
-          login('some crap').catch((err) => {
-            try {
-              expect(err).to.have.status(403);
-              expect(err.response.text).to.be.equal('2FA authentication failed');
-            } finally {
-              totpSecret = rightSecret;
-            }
+          await expect(login('some crap')).to.be.rejectedWith('Forbidden').then((err) => {
+            expect(err).to.have.status(403);
+            expect(err.response.text).to.be.equal('2FA authentication failed');
           });
+          totpSecret = rightSecret;
         });
         it('returns correct jwt', async () => {
           const jwtPublicKey = fs.readFileSync('./ec512.pub.pem');
