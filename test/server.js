@@ -229,6 +229,17 @@ describe('Auth server', () => {
             expect(error).to.have.property('status', 403);
             expect(error).to.have.property('response').and.have.property('text', 'Login failed');
           }));
+        it('fails to log in with wrong login token', async () => {
+          const old = loginData.encryptedPart.expiresAt;
+          loginData.encryptedPart.expiresAt += 1;
+          await expect(login(passphrase)).to.be.rejectedWith('Forbidden').then((error) => {
+            expect(error).to.have.property('status', 403);
+            expect(error).to.have
+              .property('response')
+              .and.have.property('text', 'Encrypted part integrity check failed');
+          });
+          loginData.encryptedPart.expiresAt = old;
+        });
         it('returns correct server proof', async () => {
           const response = await login(passphrase);
           expect(srpClient.checkServerProof(response.body.serverProof)).to.be.true();
